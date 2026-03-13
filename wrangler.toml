@@ -6,6 +6,12 @@ main = "worker.js"
 binding = "DATA_BUCKET"
 bucket_name = "triangle-live-music-data"
 
-[assets]
-directory = "./"
-exclude = ["*.toml", "*.conf", "Dockerfile", "docker-compose.yml", ".dockerignore", "serve.py"]
+[env.production]
+routes = [
+  { pattern = "nctrianglemusic.live", custom_domain = true },
+]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = false

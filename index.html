@@ -833,7 +833,8 @@ function getFilteredEvents() {
     if (city && !activeCities.has(city)) return false;
     if (!showPast && isPast(e)) return false;
     if (searchQuery) {
-      const hay = [e.title, e.subtitle, e.presenter, e.venueName].join(' ').toLowerCase();
+      const genres = resolveGenres(e.artists || []);
+      const hay = [e.title, e.subtitle, e.presenter, e.venueName, ...genres].join(' ').toLowerCase();
       if (!hay.includes(searchQuery)) return false;
     }
     return true;

@@ -6,13 +6,26 @@ export default {
     const path = url.pathname;
 
     if (path === '/' || path === '/index.html') {
-      const dataObj = await env.DATA_BUCKET.get('live_music_events.json');
-      if (!dataObj) return new Response('Data unavailable', { status: 503 });
+      const [eventsObj, artistsObj] = await Promise.all([
+        env.DATA_BUCKET.get('live_music_events.json'),
+        env.DATA_BUCKET.get('artists_db.json'),
+      ]);
 
-      const json = await dataObj.text();
+      if (!eventsObj) return new Response('Data unavailable', { status: 503 });
+
+      const eventsJson = await eventsObj.text();
+
+      let genreMap = {};
+      if (artistsObj) {
+        const artists = JSON.parse(await artistsObj.text());
+        for (const [slug, data] of Object.entries(artists)) {
+          if (data.genre?.length) genreMap[slug] = data.genre;
+        }
+      }
+
       const injected = indexHtml.replace(
         '<head>',
-        `<head>\n<script>window.__EVENTS__=${json};</script>`
+        `<head>\n<script>window.__EVENTS__=${eventsJson};window.__GENRES__=${JSON.stringify(genreMap)};</script>`
       );
 
       return new Response(injected, {

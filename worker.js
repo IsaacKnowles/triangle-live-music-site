@@ -17,9 +17,13 @@ export default {
 
       let genreMap = {};
       if (artistsObj) {
-        const artists = JSON.parse(await artistsObj.text());
-        for (const [slug, data] of Object.entries(artists)) {
-          if (data.genre?.length) genreMap[slug] = data.genre;
+        try {
+          const artists = JSON.parse(await artistsObj.text());
+          for (const [slug, data] of Object.entries(artists)) {
+            if (data.genre?.length) genreMap[slug] = data.genre;
+          }
+        } catch (err) {
+          console.error('[worker] Failed to parse artists_db.json:', err);
         }
       } else {
         console.error('[worker] artists_db.json not found in R2 — serving without genre data');

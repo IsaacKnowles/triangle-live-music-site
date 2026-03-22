@@ -13,7 +13,13 @@ export default {
 
       if (!eventsObj) return new Response('Data unavailable', { status: 503 });
 
-      const eventsJson = await eventsObj.text();
+      let eventsJson;
+      try {
+        eventsJson = await eventsObj.text();
+      } catch (err) {
+        console.error('[worker] Failed to read live_music_events.json:', err);
+        return new Response('Data unavailable', { status: 503 });
+      }
 
       let genreMap = {};
       if (artistsObj) {

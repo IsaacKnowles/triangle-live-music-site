@@ -21,6 +21,8 @@ export default {
         for (const [slug, data] of Object.entries(artists)) {
           if (data.genre?.length) genreMap[slug] = data.genre;
         }
+      } else {
+        console.error('[worker] artists_db.json not found in R2 — serving without genre data');
       }
 
       const injected = indexHtml.replace(

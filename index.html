@@ -495,6 +495,8 @@
       line-height: 1.2;
     }
     .event-admission { font-size: 12px; color: var(--text-muted); white-space: nowrap; margin-top: 4px; }
+    .genre-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .genre-chip { font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
 
     /* ── Calendar view ── */
     .cal-nav {
@@ -831,7 +833,8 @@ function getFilteredEvents() {
     if (city && !activeCities.has(city)) return false;
     if (!showPast && isPast(e)) return false;
     if (searchQuery) {
-      const hay = [e.title, e.subtitle, e.presenter, e.venueName].join(' ').toLowerCase();
+      const genres = resolveGenres(e.artists || []);
+      const hay = [e.title, e.subtitle, e.presenter, e.venueName, ...genres].join(' ').toLowerCase();
       if (!hay.includes(searchQuery)) return false;
     }
     return true;
@@ -980,6 +983,24 @@ function renderEvents() {
 }
 
 // ── Card renderers ────────────────────────────────────────────────────────────
+function resolveGenres(artists) {
+  const seen = new Set();
+  const result = [];
+  const ordered = [
+    ...artists.filter(a => a.role === 'headliner'),
+    ...artists.filter(a => a.role !== 'headliner'),
+  ];
+  for (const a of ordered) {
+    for (const g of (window.__GENRES__?.[a.slug] || [])) {
+      if (!seen.has(g) && result.length < 3) {
+        seen.add(g);
+        result.push(g);
+      }
+    }
+  }
+  return result;
+}
+
 function renderCard(e) {
   const color        = e.venueColor;
   const pastCls      = isPast(e) ? ' past' : '';
@@ -987,6 +1008,10 @@ function renderCard(e) {
   const presenterHtml= e.presenter  ? `<span class="presenter">${esc(e.presenter)}</span>` : '';
   const admissionHtml= e.admission  ? `<div class="event-admission">${esc(e.admission)}</div>` : '';
   const linksHtml    = renderMusicLinks(e.music_links || {});
+  const genres       = resolveGenres(e.artists || []);
+  const genreHtml    = genres.length
+    ? `<div class="genre-tags">${genres.map(g => `<span class="genre-chip">${esc(g)}</span>`).join('')}</div>`
+    : '';
 
   const parsed = parseTime(e.time);
   const timeInnerHtml = parsed
@@ -1017,6 +1042,7 @@ function renderCard(e) {
         </div>
         ${subtitleHtml}
         ${presenterHtml ? `<div class="event-meta">${presenterHtml}</div>` : ''}
+        ${genreHtml}
         ${admissionHtml}
         ${linksHtml}
       </div>
